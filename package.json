@@ -37,6 +37,7 @@
         "faker": "^3.1.0",
         "lodash": "^4.15.0",
         "raml-1-parser": "latest",
-        "underscore": "^1.8.3"
+        "underscore": "^1.8.3",
+        "ramldt2jsonschema": "^0.3.0"
     }
 }

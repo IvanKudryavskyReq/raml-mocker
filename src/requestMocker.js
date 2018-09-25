@@ -4,6 +4,7 @@ var RequestMocker = function (uri, method) {
     this.uri = uri;
     this.method = method;
     this.responses = {};
+    this.responseTypes = {};
     this.examples = {};
 };
 RequestMocker.prototype = _.extend(RequestMocker.prototype, {
@@ -21,6 +22,14 @@ RequestMocker.prototype = _.extend(RequestMocker.prototype, {
             throw 'Code not defined in examples';
         }
     },
+    getResponseTypeByCode: function(code){
+        return this.responseTypes[code];
+
+    },
+    addResponseType: function(code, responseType){
+        return this.responseTypes[code] = responseType;
+
+    },
     getResponses: function () {
         return this.responses;
     },
@@ -28,7 +37,7 @@ RequestMocker.prototype = _.extend(RequestMocker.prototype, {
         return this.examples;
     },
     addResponse: function(code, exampleAndMockObj) {
-        this.responses[code] = exampleAndMockObj; 
+        this.responses[code] = exampleAndMockObj;
     }
 });
 

@@ -65,12 +65,13 @@ function generateFromFiles(files, parserOptions, formats, callback) {
     var requestsToMock = [];
     async.each(files, function (file, cb) {
         raml.loadApi(file, parserOptions).then(function (data) {
+            data = data.expand(true);
             getRamlRequestsToMock(data.toJSON(), '/', formats, function (reqs) {
                 requestsToMock = _.union(requestsToMock, reqs);
                 cb();
             });
         }).catch(function (error) {
-            cb('Error parsing: ' + error);
+            // cb('Error parsing: ' + error);
         });
     }, function (err) {
         if (err) {
@@ -138,8 +139,10 @@ function getRamlRequestsToMockMethods(definition, uri, formats, callback) {
 
                     exampleAndMockObj[Object.keys(req).toString()] = {
                         example: req[Object.keys(req).toString()].example ? req[Object.keys(req).toString()].example : null,
-                        mock: mockData(Object.keys(req).toString())
+                        mock: mockData(Object.keys(req).toString()),
+                        response: reqDefinition.responseList
                     };
+                    methodMocker.addResponseType(reqDefinition.code, req[Object.keys(req).toString()]);
                 })
 
                 methodMocker.addResponse(reqDefinition.code, exampleAndMockObj);
@@ -174,14 +177,15 @@ function getResponsesByCode(responses) {
             responsesByCode.push({
                 [body.name]: {
                     example: body.example ? body.example : null,
-                    schema: schema
+                    schema: schema,
+                    type: body.type ? body.type : null,
                 }
             });
         });
 
         if (!_.isNaN(Number(code)) && body) {
             code = Number(code);
-            // append example and schema list to responseByCodeList 
+            // append example and schema list to responseByCodeList
             responsesByCodeList.push({
                 code: code,
                 responseList: responsesByCode
@@ -197,30 +201,30 @@ function getRamlRequestsToMockResources(definition, uri, formats, callback) {
     var baseUri = '';
 
     if (definition.baseUri && definition.baseUriParameters) {
-      // extract the variables from the baseUri
-      var uriElems = definition.baseUri.match(/{[a-zA-Z]+}/g);
+        // extract the variables from the baseUri
+        var uriElems = definition.baseUri.match(/{[a-zA-Z]+}/g);
 
-      var tempBaseUri = definition.baseUri;
-      uriElems.map(function (elem) { // e.g. elem == '{host}'
-        var strippedElem = elem.replace("{","").replace("}","");
-        var elemValue = definition.baseUriParameters[strippedElem].default ? definition.baseUriParameters[strippedElem].default : definition.baseUriParameters[strippedElem].name;
+        var tempBaseUri = definition.baseUri;
+        uriElems.map(function (elem) { // e.g. elem == '{host}'
+            var strippedElem = elem.replace("{","").replace("}","");
+            var elemValue = definition.baseUriParameters[strippedElem].default ? definition.baseUriParameters[strippedElem].default : definition.baseUriParameters[strippedElem].name;
 
-        if (!elemValue) {
-              elemValue = definition[strippedElem];
+            if (!elemValue) {
+                elemValue = definition[strippedElem];
             }
-        if (elemValue) {
-          tempBaseUri = tempBaseUri.replace( new RegExp(elem, 'g'), elemValue);
-        } else {
-          console.log("No value found for "+elem);
-        }
-      });
-      baseUri = url.parse(tempBaseUri).pathname;
+            if (elemValue) {
+                tempBaseUri = tempBaseUri.replace( new RegExp(elem, 'g'), elemValue);
+            } else {
+                console.log("No value found for "+elem);
+            }
+        });
+        baseUri = url.parse(tempBaseUri).pathname;
     }
 
     if (definition.baseUri && !definition.baseUriParameters) {
         baseUri = url.parse(definition.baseUri).pathname;
     }
-    
+
     async.each(definition.resources, function (def, cb) {
         getRamlRequestsToMock(def, baseUri + uri, formats, function (reqs) {
             requestsToMock = _.union(requestsToMock, reqs);
