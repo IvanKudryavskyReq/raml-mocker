@@ -38,6 +38,7 @@
         "lodash": "^4.15.0",
         "raml-1-parser": "latest",
         "underscore": "^1.8.3",
-        "ramldt2jsonschema": "^0.3.0"
+        "ramldt2jsonschema": "^0.3.0",
+        "osprey": "^0.5.0"
     }
 }

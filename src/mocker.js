@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const raml2json = require('ramldt2jsonschema');
 const dataMocker = require('./schema.js');
-var _ = require('lodash');
+let _ = require('lodash');
 
 let Mocker = function (ramlFile) {
     this.formatMap = {};
@@ -15,14 +15,10 @@ let Mocker = function (ramlFile) {
 Mocker.prototype = _.extend(Mocker.prototype, {
     getResponse: function (response){
         if(Array.isArray(response.type)) {
-
             return this.getMockData(response.type);
         } else {
             return this.getMockForObject(response.type.properties);
         }
-        // if(response.type.length === 1) {
-        //     console.log(this.getMockData(response.type[0]));
-        // }
     },
     getMockForObject: function(object) {
         let res = {};

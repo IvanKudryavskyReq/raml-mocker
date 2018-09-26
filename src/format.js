@@ -13,6 +13,9 @@ var defaultFormats = {
     'email': function (faker) {
         return faker.internet.email();
     },
+    'name': function (faker) {
+        return faker.name.firstName();
+    },
     'hostname': function (faker) {
         return faker.internet.domainName();
     },
