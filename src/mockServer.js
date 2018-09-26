@@ -7,22 +7,43 @@ let MockServer = function (ramlFile) {
     this.ramlFile = ramlFile;
     this.mocker = new Mocker(ramlFile);
     this.app = {};
+    this.errorHandler = null;
 };
 MockServer.prototype =_.extend(MockServer.prototype, {
     init: function (app, port) {
         this.app = app;
-        osprey.loadFile(this.ramlFile)
-            .then(function (middleware) {
-                app.use(middleware);
-                app.use(function (err, req, res, next) {
-                    res.status(500).send(err);
-                });
 
-                app.listen(port);
-            })
-            .catch(function(e) { console.error("Error: %s", e.message); });
+        const ramlConfig = {
+            "disableErrorInterception": true
+        };
+
+        let errorCallback = function (err, req, res, next) {
+            if(this.errorHandler) {
+                this.errorHandler(err, req, res, next);
+            }
+            if(err.ramlNotFound) {
+                res.status(err.statusCode).send();
+            }
+            res.status(500).send(err);
+        };
+
+        let ramlParseCallback = function (middleware) {
+            app.use(middleware);
+            app.use(errorCallback.bind(this));
+            app.listen(port);
+
+        };
+
+        osprey.loadFile(this.ramlFile, ramlConfig)
+            .then(ramlParseCallback.bind(this))
+            .catch(function(e) {
+                // console.error("Error: %s", e.message);
+            });
 
         mockerRequestGenerator.generate({files: [this.ramlFile]}, this.callbackMock.bind(this));
+    },
+    setErrorHandler: function(handler) {
+        this.errorHandler = handler;
     },
     setUrlHandler: function(reqToMock) {
         let handler = function(req,res) {

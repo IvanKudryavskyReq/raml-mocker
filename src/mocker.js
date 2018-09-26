@@ -42,7 +42,7 @@ Mocker.prototype = _.extend(Mocker.prototype, {
             return this.schemaCache[type];
         }
         let schema = raml2json.dt2js(this.ramlData, type);
-        schema.properties = this.prepareSchema(schema.properties, type[0]);
+        schema.properties = this.prepareSchema(schema.properties, type);
         this.schemaCache[type] = schema;
         return schema;
     },
@@ -66,7 +66,9 @@ Mocker.prototype = _.extend(Mocker.prototype, {
         return schemaProperties;
     },
     getFormatMapByType: function (type) {
-        // if(typeof type === 'object')
+        if(Array.isArray(type)) {
+            type = type[0];
+        }
         return this.formatMap[type.toLowerCase()];
     },
     setFormatMap: function (map) {
