@@ -144,7 +144,7 @@ function getRamlRequestsToMockMethods(definition, uri, formats, callback) {
                     };
                     methodMocker.addResponseType(reqDefinition.code, req[Object.keys(req).toString()]);
                 })
-
+                // console.log(uri, reqDefinition.code);
                 methodMocker.addResponse(reqDefinition.code, exampleAndMockObj);
             });
             if (currentMockDefaultCode) {
@@ -165,25 +165,36 @@ function getResponsesByCode(responses) {
         if (!response) return;
         var body = response.body;
 
-        _.each(response.body, function(body) {
-            var schema = null;
-            try {
-                schema = body.schema && JSON.parse(body.schema);
-            } catch(exception) {
-                //console.log(exception.stack);
-            }
-
-            // gather example and schema to list
+        if (body === undefined) {
             responsesByCode.push({
-                [body.name]: {
-                    example: body.example ? body.example : null,
-                    schema: schema,
-                    type: body.type ? body.type : null,
+                ["empty"]: {
+                    example: null,
+                    schema: null,
+                    type: null,
                 }
             });
-        });
+        } else {
 
-        if (!_.isNaN(Number(code)) && body) {
+            _.each(response.body, function (body) {
+                var schema = null;
+                try {
+                    schema = body.schema && JSON.parse(body.schema);
+                } catch (exception) {
+                    //console.log(exception.stack);
+                }
+
+                // gather example and schema to list
+                responsesByCode.push({
+                    [body.name]: {
+                        example: body.example ? body.example : null,
+                        schema: schema,
+                        type: body.type ? body.type : null,
+                    }
+                });
+            });
+        }
+
+        if (!_.isNaN(Number(code))) {
             code = Number(code);
             // append example and schema list to responseByCodeList
             responsesByCodeList.push({

@@ -26,10 +26,13 @@ MockServer.prototype =_.extend(MockServer.prototype, {
     },
     setUrlHandler: function(reqToMock) {
         let handler = function(req,res) {
-            let code = reqToMock.method === 'post' ? 201 : 200;
-            let response = reqToMock.getResponseTypeByCode(code);
-
-            res.status(code).send(this.mocker.getResponse(response));
+            let response = reqToMock.getResponseTypeByCode(reqToMock.successCode);
+            if(response.type === null) {
+                response = "";
+            } else {
+                response = this.mocker.getResponse(response);
+            }
+            res.status(reqToMock.successCode).send(response);
         };
         this.app[reqToMock.method](reqToMock.uri, handler.bind(this));
     },

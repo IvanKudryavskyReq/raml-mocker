@@ -6,6 +6,7 @@ var RequestMocker = function (uri, method) {
     this.responses = {};
     this.responseTypes = {};
     this.examples = {};
+    this.successCode = 200;
 };
 RequestMocker.prototype = _.extend(RequestMocker.prototype, {
     mockByCode: function (code) {
@@ -37,6 +38,9 @@ RequestMocker.prototype = _.extend(RequestMocker.prototype, {
         return this.examples;
     },
     addResponse: function(code, exampleAndMockObj) {
+        if(code === 204 || code === 201){
+            this.successCode = code;
+        }
         this.responses[code] = exampleAndMockObj;
     }
 });

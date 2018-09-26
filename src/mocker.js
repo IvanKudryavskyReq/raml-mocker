@@ -7,13 +7,13 @@ let _ = require('lodash');
 let Mocker = function (ramlFile) {
     this.formatMap = {};
     this.ramlData = fs.readFileSync(ramlFile).toString();
+    this.schemaCache = {};
     raml2json.dt2js.setBasePath(path.dirname(ramlFile));
-    // let schema2 = raml2json.dt2js(ramlData, 'User');
-    // console.log(ramlData);
+    this.customFormats = {};
 };
 
 Mocker.prototype = _.extend(Mocker.prototype, {
-    getResponse: function (response){
+    getResponse: function (response) {
         if(Array.isArray(response.type)) {
             return this.getMockData(response.type);
         } else {
@@ -35,34 +35,45 @@ Mocker.prototype = _.extend(Mocker.prototype, {
         return res;
     },
     getMockData: function (type) {
-        let schema = raml2json.dt2js(this.ramlData, type);
-        schema = this.prepareSchema(schema, type);
-        return dataMocker(schema);
+        return dataMocker(this.getSchema(type), this.customFormats);
     },
-
-    prepareSchema(schema, type) {
-        let format = this.getFormatMapByType(type);
-
-        if (!format) {
-            return schema;
+    getSchema: function(type) {
+        if(this.schemaCache[type]) {
+            return this.schemaCache[type];
         }
-
-        if (!schema.hasOwnProperty('properties')) {
-            return schema;
-        }
-        for (let prop in format) {
-            if(schema.properties.hasOwnProperty(prop) && !schema.properties[prop].hasOwnProperty('format')){
-                schema.properties[prop]['format'] = format[prop];
-            }
-        }
-
+        let schema = raml2json.dt2js(this.ramlData, type);
+        schema.properties = this.prepareSchema(schema.properties, type[0]);
+        this.schemaCache[type] = schema;
         return schema;
     },
+    prepareSchema(schemaProperties, type) {
+        let format = this.getFormatMapByType(type);
+
+        for (let prop in schemaProperties) {
+            if(schemaProperties[prop].type === 'object') {
+                schemaProperties[prop].properties = this.prepareSchema(schemaProperties[prop].properties, prop);
+            } else {
+                if(format
+                    && format.hasOwnProperty(prop)
+                    && !schemaProperties[prop].hasOwnProperty('format')
+                ){
+                    schemaProperties[prop]['format'] = format[prop];
+                }
+            }
+
+        }
+
+        return schemaProperties;
+    },
     getFormatMapByType: function (type) {
-        return this.formatMap[type];
+        // if(typeof type === 'object')
+        return this.formatMap[type.toLowerCase()];
     },
     setFormatMap: function (map) {
         this.formatMap = map;
+    },
+    setCustomFormats: function (formats) {
+        this.customFormats = formats;
     }
 });
 module.exports = Mocker;

@@ -42,6 +42,18 @@ var defaultFormats = {
     },
     'avatar': function (faker) {
         return faker.image.avatar();
+    },
+    'geo_latitude': function (faker) {
+        return faker.address.latitude();
+    },
+    'geo_longitude': function (faker) {
+        return faker.address.latitude();
+    },
+    'phone': function (faker) {
+        return faker.phone.phoneNumberFormat(1);
+    },
+    'fullAddress': function (faker) {
+        return faker.address.county() + ', ' + faker.address.state() + ' ' + faker.address.streetAddress("###") + ', ' + faker.address.zipCode();
     }
 
 
