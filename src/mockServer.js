@@ -8,6 +8,7 @@ let MockServer = function (ramlFile) {
     this.mocker = new Mocker(ramlFile);
     this.app = {};
     this.errorHandler = null;
+    this.initCallback = null;
 };
 MockServer.prototype =_.extend(MockServer.prototype, {
     init: function (app, port) {
@@ -31,7 +32,9 @@ MockServer.prototype =_.extend(MockServer.prototype, {
             app.use(middleware);
             app.use(errorCallback.bind(this));
             app.listen(port);
-
+            if (this.initCallback) {
+                this.initCallback();
+            }
         };
 
         osprey.loadFile(this.ramlFile, ramlConfig)
@@ -41,6 +44,9 @@ MockServer.prototype =_.extend(MockServer.prototype, {
             });
 
         mockerRequestGenerator.generate({files: [this.ramlFile]}, this.callbackMock.bind(this));
+    },
+    setInitCallback: function(initCallback) {
+        this.initCallback = initCallback;
     },
     setErrorHandler: function(handler) {
         this.errorHandler = handler;
